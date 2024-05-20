@@ -1,4 +1,7 @@
 import { useState } from "react";
+import toast, { Toaster } from 'react-hot-toast';
+import { Button } from "../button";
+import { Loader2 } from "lucide-react"
 
 const SignupForm = () => {
     const[name,setName] =useState()
@@ -7,16 +10,52 @@ const SignupForm = () => {
     const [cpassword, setCpassword] = useState()
     const [pic, setPic] = useState()
     const [show, setShow] = useState(false)
+    const [loading,setLoading] =useState(false)
     
     const toggleShow = (e)=>{
         e.preventDefault()
         setShow(!show)
     }
-    const postDetails=()=>{
+    const postDetails=(pics)=>{
+        setLoading(true)
+        if(pics === undefined){
+          toast("Please select an Image",{
+            duration:5000,
+            position:"top-center"
 
+          })
+          return 
+        }
+        if(pics.type === "image/jpeg " || pics.type === 'image/png' || pics.type==='image/jpg' ) {
+          const data  = new FormData()
+          data.append("file",pics)
+          data.append("upload_preset","chat-App")
+          data.append("cloud_name","drr8dcfon")
+          fetch("https://api.cloudinary.com/v1_1/drr8dcfon/image/upload",{
+            method:'post',
+            body:data,
+          }).then((res)=>res.json())
+           .then((data)=>{
+            setPic(data.url.toString());
+            setLoading(false)
+           }).catch((error)=>{
+            console.log(error);
+            setLoading(false)
+           });
+          
+
+        }else{
+            toast("Please choose jpeg or png",{
+              duration:5000,
+              position:"top-center"
+  
+            })
+            setLoading(false)
+        }
     }
-    const submitHandler =()=>{
-
+    const submitHandler =(e)=>{
+        e.preventDefault()
+        
     }
     return(
     <div>
@@ -55,9 +94,10 @@ const SignupForm = () => {
            onChange={(e)=>postDetails(e.target.files[0])}
           />
         </div>
-        <button className="w-full py-2 mt-4 bg-blue-600 text-white rounded"
+        <Button 
+        className="w-full py-2 mt-4 bg-blue-600 text-white rounded"
         onClick={submitHandler}
-        >Signup 👋 </button>
+        >Signup 👋 </Button>
       </form>
     </div>
   );

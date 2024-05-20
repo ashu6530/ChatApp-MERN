@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import userRouter from './routes/userRoutes.js'
+import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
 
 // Configure dotenv at the top before using any environment variables
@@ -25,7 +26,7 @@ app.get('/chats', (req, res) => {
     res.send('hello Ashu!');
 });
 app.use('/api/user',userRouter)
-app.use(notfound)
+app.use(notFound)
 app.use(errorHandler)
 
 // Port listener
