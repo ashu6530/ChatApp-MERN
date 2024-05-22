@@ -1,7 +1,8 @@
 import { useState } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 import { Button } from "../button";
-import { Loader2 } from "lucide-react"
+import axios from 'axios'
+import {useNavigate} from 'react-router-dom'
 
 const SignupForm = () => {
     const[name,setName] =useState()
@@ -11,6 +12,7 @@ const SignupForm = () => {
     const [pic, setPic] = useState()
     const [show, setShow] = useState(false)
     const [loading,setLoading] =useState(false)
+    const navigate = useNavigate()
     
     const toggleShow = (e)=>{
         e.preventDefault()
@@ -24,9 +26,10 @@ const SignupForm = () => {
             position:"top-center"
 
           })
+          setLoading(false); // Don't forget to set loading to false if there's an early return
           return 
         }
-        if(pics.type === "image/jpeg " || pics.type === 'image/png' || pics.type==='image/jpg' ) {
+        if (pics.type === "image/jpeg" || pics.type === "image/png" || pics.type === "image/jpg"){
           const data  = new FormData()
           data.append("file",pics)
           data.append("upload_preset","chat-App")
@@ -36,7 +39,9 @@ const SignupForm = () => {
             body:data,
           }).then((res)=>res.json())
            .then((data)=>{
+            console.log(data);
             setPic(data.url.toString());
+            console.log(data.url.toString());
             setLoading(false)
            }).catch((error)=>{
             console.log(error);
@@ -55,32 +60,73 @@ const SignupForm = () => {
     }
     const submitHandler =(e)=>{
         e.preventDefault()
-        
+        setLoading(true)
+        if(!name || !email || !password || !cpassword){
+          toast.error("Please fill all the feilds",{
+            duration:5000,
+            position:"top-center"
+
+          })
+          setLoading(false); // Don't forget to set loading to false if there's an early return
+          return 
+        }
+        if(password !== cpassword){
+          toast.error("Password is not matching",{
+            duration:5000,
+            position:"top-center"
+
+          })
+          return ;    
     }
+    try {
+      const config ={
+        headers:{
+          "Content-type":"application/json"
+        }
+      }
+      const data = axios.post('http://localhost:3000/api/user/signup',{name,email,password,pic},config);
+      toast.success("Registration Successful",{
+        duration:5000,
+        position:"top-center"
+
+      });
+      localStorage.setItem('userInfo',JSON.stringify(data))
+      setLoading(false)
+      navigate('/chats')
+    } catch (error) {
+      toast.error("Error Occured",{
+        duration:5000,
+        position:"top-center",
+        description: error.responce.data.message,
+
+      });
+      setLoading(false)
+    }
+  }
     return(
     <div>
       <h2 className="text-3xl text-white font-bold mb-4">Signup</h2>
       <form>
         <div className="mb-4">
           <label className="block text-white mb-2" htmlFor="name">Name</label>
-          <input className="w-full p-2 rounded bg-gray-800 text-white" type="text" id="name" 
+          <input className="w-full p-2 rounded bg-gray-800 text-white" name="name"  type="text" id="name" 
           onChange={(e)=>setName(e.target.value)}
           />
         </div>
         <div className="mb-4">
           <label className="block text-white mb-2" htmlFor="email">Email</label>
-          <input className="w-full p-2 rounded bg-gray-800 text-white" type="email" id="email" 
+          <input className="w-full p-2 rounded bg-gray-800 text-white" name="email" type="email" id="email" 
            onChange={(e)=>setEmail(e.target.value)}/>
         </div>
         <div className="mb-4">
           <label className="block text-white mb-2" htmlFor="password">Password</label>
-          <input className="w-full p-2 rounded bg-gray-800 text-white" type="password" id="password" 
+          <input className="w-full p-2 rounded bg-gray-800 text-white" name="password" type="password" id="password" 
            onChange={(e)=>setPassword(e.target.value)}/>
           <button>{show ? 'Hide' : "Show"}</button>
         </div>
         <div className="mb-4 relative">
           <label className="block text-white mb-2" htmlFor="password">Confirm Password</label>
-          <input className="w-full p-2 rounded bg-gray-800 text-white" type={show ? "text" : "password"} id="cpassword" 
+          <input className="w-full p-2 rounded bg-gray-800 text-white" name="cpassword"  type={show ? "text" : "password"} id="cpassword" 
            onChange={(e)=>setCpassword(e.target.value)}
           />
           <button 
@@ -90,7 +136,7 @@ const SignupForm = () => {
         </div>
         <div className="mb-4">
           <label className="block text-white mb-2" htmlFor="password">Upload Picture  </label>
-          <input className="w-full p-2 rounded bg-gray-800 text-white" type="file" accept="images/*" id="file" 
+          <input className="w-full p-2 rounded bg-gray-800 text-white" type="file" accept="image/*" id="file" 
            onChange={(e)=>postDetails(e.target.files[0])}
           />
         </div>
@@ -102,4 +148,5 @@ const SignupForm = () => {
     </div>
   );
 }
+
   export default SignupForm
